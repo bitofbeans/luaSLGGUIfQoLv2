@@ -1,4 +1,12 @@
--- luaSLGGUIfQoLv2 SOURC
+-- luaSLGGUIfQoLv2 SOURCE CODE
+--[[
+  ____   _      ____   ____  _   _  ___  _____  ___    ___   _     
+ / ___| | |    / ___| / ___|| | | ||_ _||  ___|/ _ \  / _ \ | |    
+ \___ \ | |   | |  _ | |  _ | | | | | | | |_  | | | || | | || |    
+  ___) || |___| |_| || |_| || |_| | | | |  _| | |_| || |_| || |___ 
+ |____/ |_____|\____| \____| \___/ |___||_|    \__\_\ \___/ |_____|     
+                                                     
+]]
 
 local GUI = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source.lua'))()
 --
