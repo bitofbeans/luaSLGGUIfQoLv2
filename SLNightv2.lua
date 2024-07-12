@@ -168,6 +168,7 @@ local function constructInflictPlayerArgs(gun, actorName, recipientName)
         [11] = Vector3.new(-0.956211268901825, 0.00013869439135305583, -0.29267749190330505),
         [12] = true -- do damage?
     }
+    return args
 end
 
 
