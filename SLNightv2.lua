@@ -346,7 +346,7 @@ local function CarMoneyFarm (player)
         return Enabled
     end
 
-    for i,v in workspace.Interactions:GetDescendants() do
+    for i,v in next, workspace.Interactions:GetDescendants() do
         if v and v.Name == "ProximityPrompt" and v:IsA("ProximityPrompt") then
             
             local result = firepp(v,5, true) 
@@ -1466,7 +1466,7 @@ local function MakeCarInvincible()
         quickNotify("Already applied invincibility", "", 1.5)
         return
     end
-    for i,v in (Car.Parent:GetDescendants()) do
+    for i,v in next, (Car.Parent:GetDescendants()) do
         if v.ClassName =="TouchTransmitter" then
             v:Remove()
         end
@@ -1764,7 +1764,7 @@ local InstantRespawn = Exploits:CreateButton({
 local InstantInteract = Exploits:CreateButton({
     Name = "Instant Interact Prompts",
     Callback = function()
-        for i,v in game:GetDescendants() do
+        for i,v in next, game:GetDescendants() do
             if v and v:IsA("ProximityPrompt") then
                 v.HoldDuration = 0
             end
@@ -2140,7 +2140,17 @@ local Section = Movement:CreateSection("Car")
 
 local SelectCar = Movement:CreateDropdown({
     Name = "Select Car (must own)",
-    Options = {"Sedan","GLE53","CLS","Hellcat","RollsRoyce","RS6","RS3","M2","Urus"},
+    Options = {
+        "RS6",
+        "RollsRoyce",
+        "RS3",
+        "Hellcat",
+        "GLE53",
+        "M2",
+        "Sedan",
+        "Urus",
+        "CLS",
+    },
     CurrentOption = "Sedan",
     Flag = "CarType",
     Callback = function(option)
@@ -2530,7 +2540,7 @@ local InjectInfiniteYield = Misc:CreateButton({
 
 -- ON LAUNCH ACTIONS
 -- Quality of Life proximity prompts
-for i,v in game:GetDescendants() do
+for i,v in next, game:GetDescendants() do
     if v and v:IsA("ProximityPrompt") then
         v.HoldDuration = 0
     end
