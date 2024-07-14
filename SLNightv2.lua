@@ -1504,7 +1504,7 @@ local function CarMod()
     local Car = getPlayerCar()
     local Seat = Car:FindFirstChild("DriveSeat")
     Seat.HeadsUpDisplay = true
-    local Speed = 50
+    local Speed = 60
     local Wheels = Car:FindFirstChild("Wheels"):GetChildren()
     local XAccel = 0
     
@@ -1517,6 +1517,7 @@ local function CarMod()
             end
             local Gyro = v:FindFirstChild("#AV")
             local WheelDirection = v.CFrame.UpVector
+            v.CustomPhysicalProperties = PhysicalProperties.new(0.1, 0.7, 0,100,1)
     
             if v.Name == "FL" then
                 v.AssemblyAngularVelocity = v.AssemblyAngularVelocity +(WheelDirection * (XAccel))
@@ -1540,19 +1541,111 @@ local function CarMod()
             connection:Disconnect()
         end
         XAccel = XAccel + Seat.Throttle * Speed
-        if getSpeed(Seat) < 60 then
-            XAccel = XAccel * 0.2
-        elseif getSpeed(Seat) < 115 then
-            XAccel = XAccel * 0.3
-        elseif getSpeed(Seat) < 200 then
-            XAccel = XAccel * 0.4
-        else
-            XAccel = XAccel * 0
-        end
+        
+        local X = getSpeed(Seat)
+        local formulatedSpeedCurve = -0.00000458365*(X^2) + 0.00262032*X + 0.0592819
+        -- 60-0.2, 115-0.3, 200-0.4
+        XAccel = XAccel * formulatedSpeedCurve
+
     end)
 
+    getPlayerCar().Body:FindFirstChild("#Weight").CustomPhysicalProperties = PhysicalProperties.new(0.154, 0, 0)
     quickNotify("Car speed mod attached", "", 1.5)
 end
+
+local function CarSkin(CarSkinName) 
+    local CarSkinAdjustments = {
+        ["Sedan"] = {
+            Pos = CFrame.new(0, 0, 0),
+            TireFix = 90,
+        },
+        ["GLE53"] = {
+            Pos = CFrame.Angles(math.rad(-5), 0, 0),
+            TireFix = -90,
+        },
+        ["CLS"] = {
+            Pos = (CFrame.new(1.5, 0.5, 0) * CFrame.Angles(0 , math.rad(180), 0)),
+            TireFix = 90,
+        },
+        ["Hellcat"] = {
+            Pos = CFrame.new(0, -0.3, 0),
+            TireFix = -90,
+        },
+        ["RollsRoyce"] = {
+            Pos = (CFrame.new(1.5, 1, 0) * CFrame.Angles(0 , math.rad(180), 0)),
+            TireFix = -90,
+        },
+        ["RS6"] = {
+            Pos = CFrame.new(0, 0.2, 0),
+            TireFix = 90,
+        },
+        ["RS3"] = {
+            Pos = CFrame.new(0, 0, 0),
+            TireFix = 0,
+        },
+        ["M2"] = {
+            Pos = (CFrame.new(1.5, 0.8, 0) * CFrame.Angles(math.rad(-90), math.rad(180), 0)),
+            TireFix = -90,
+        },
+        ["Urus"] = {
+            Pos = CFrame.new(1.5, 1.2, 0),
+            TireFix = -90,
+        },
+    }
+    local CarSkinAdj = CarSkinAdjustments[CarSkinName]
+    
+    
+    local PlayerCar = getPlayerCar()
+    local PlayerCarWheels = PlayerCar:FindFirstChild("Wheels")
+    for i,v in next, PlayerCar:GetDescendants() do
+        -- makes old skin disappear, needs to run before new skin is added
+        if v:IsA("BasePart") then v.Transparency = 1 end
+    end
+    
+    local NewCarObj = ReplicatedStorage.Cars:FindFirstChild(CarSkinName):Clone()
+    local NewCarBody = NewCarObj:FindFirstChild("Body")
+    NewCarObj.Name = "~~~CARSKIN~~~"
+    NewCarObj.Parent = PlayerCar
+    NewCarObj.PrimaryPart = NewCarBody:FindFirstChild("DriveSeat")
+    
+    for i,v in next, NewCarObj:GetDescendants() do
+        -- fixes weird movement bugs, makes it skin only
+        if v:IsA("BasePart") then v.CanCollide = false end 
+    end
+    
+    for i,v in next, NewCarObj:FindFirstChild("DriveSeat"):GetDescendants() do
+        -- remove drive seats
+        v:Remove()
+    end
+    
+    local PositionConn; PositionConn = RunService.RenderStepped:Connect(function()
+        if not PlayerCar.Parent then 
+            PositionConn:Disconnect() -- cleanup when car is deleted
+            return 
+        end
+        NewCarObj:PivotTo(PlayerCar.DriveSeat.CFrame * CarSkinAdj.Pos )
+    end)
+    
+    for i, NewWheel in next, NewCarObj:FindFirstChild("Wheels"):GetChildren() do
+        -- wheel rotation + removing springs
+        local PlayerWheel = PlayerCarWheels[NewWheel.Name]
+        PlayerWheel:FindFirstChildOfClass("SpringConstraint").Visible = false
+        
+        for j, Part in next, NewWheel.Parts:GetDescendants() do 
+            if Part:IsA("BasePart") and Part.Mass > 0.009 then   -- we dont want models
+                -- small mass means its prolly a logo or something tiny
+                local RotationConn; RotationConn = RunService.RenderStepped:Connect(function()
+                    if not PlayerCar.Parent then 
+                        RotationConn:Disconnect() -- cleanup when car is deleted
+                        return 
+                    end            
+                    Part.Rotation = PlayerWheel.Rotation + Vector3.new(0,0,CarSkinAdj.TireFix)
+                end)
+            end 
+        end
+    end
+end
+
 
 local function TurnInvisible()
     local Char = game:GetService("Players").LocalPlayer.Character
@@ -2138,8 +2231,8 @@ local TeleportButton = Movement:CreateButton({
 
 local Section = Movement:CreateSection("Car")
 
-local SelectCar = Movement:CreateDropdown({
-    Name = "Select Car (must own)",
+local SelectCarToSpawn = Movement:CreateDropdown({
+    Name = "Select Car to Spawn (must own)",
     Options = {
         "RS6",
         "RollsRoyce",
@@ -2152,7 +2245,7 @@ local SelectCar = Movement:CreateDropdown({
         "CLS",
     },
     CurrentOption = "Sedan",
-    Flag = "CarType",
+    Flag = "SelectCarToSpawn",
     Callback = function(option)
     end
 })
@@ -2160,7 +2253,7 @@ local SelectCar = Movement:CreateDropdown({
 local RemoteCarSpawn = Movement:CreateButton({
     Name = "Spawn Car",
     Callback = function()
-        RemoteSpawnCar(SelectCar.CurrentOption[1])
+        RemoteSpawnCar(SelectCarToSpawn.CurrentOption[1])
     end
 })
 
@@ -2178,7 +2271,31 @@ local AttachCarMod = Movement:CreateButton({
         CarMod()
     end
 })
+local SelectCarToSkin = Movement:CreateDropdown({
+    Name = "Select Car to skin as (any)",
+    Options = {
+        "Urus",
+        "M2",
+        "RollsRoyce",
+        "RS6",
+        "RS3",
+        "Hellcat",
+        "GLE53",
+        "CLS",
+        "Sedan",
+    },
+    CurrentOption = "Urus",
+    Flag = "CarType",
+    Callback = function(option)
+    end
+})
 
+local SkinCarButton = Movement:CreateButton({
+    Name = "Apply Car Skin",
+    Callback = function()
+        CarSkin(SelectCarToSkin.CurrentOption[1])
+    end
+})
 local PutCarUnderMap = Movement:CreateButton({
     Name = "Put Car Under Map",
     Callback = function()
