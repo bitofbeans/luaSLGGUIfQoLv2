@@ -3,7 +3,7 @@ I wanted to add a note to read before reading the code, so here it is:
 
 First off, the main file is SLNight.lua, the other ones are mostly irrevelant.
 
-This code is no longer functional at all, since the game devs did a complete remaster. Truthfully, that's for the better. Regardless, what I learned is not lost. (The game is now called Street Life Remastered)
+This code is no longer functional at all, since the game devs did a well-deserved complete remaster. Regardless, what I learned is not lost. (The game is now called Street Life Remastered)
 
 The code quality is not necessarily amazing. The main reason for this is because most of the decisions and writing was made on the fly. Whatever worked first was what stayed since it worked, and my attention shifted to either using what I just wrote, or finding new, cooler stuff. The secondary reason is that I wrote this code long ago, so it's naturally not as good.
 
